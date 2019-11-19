@@ -1,10 +1,12 @@
 import Discord from "discord.js";
 import express from "express";
 import fetch from "isomorphic-fetch";
+import stringify from "json-stringify-safe";
 import https from "https";
 import fs from "fs";
+import Bluebird from "bluebird";
 
-import { getDestinyMemberships } from "./bungie";
+import { getDestinyMemberships, getDestinyProfile, getClan } from "./bungie";
 
 require("dotenv-safe").config();
 
@@ -56,7 +58,7 @@ const getDiscordUser = (id: string) => {
   console.log(`Looking for discord user id in cache: ${id}`);
   const result = discordUserMap.get(id);
   !!result ? console.log("Found user!") : console.log("Could not find user");
-  return result;
+  return result || (client.users && client.users.get(id));
 };
 
 client.on("message", msg => {
@@ -148,23 +150,35 @@ app.get("/register", async (req, res) => {
 
       const discordUser = getDiscordUser(state);
 
-      console.log("Destiny memberships:");
-      discordUser && discordUser.send("Found destiny memberships:");
-      membershipData.forEach(m => {
-        console.log(
-          `Platform: ${getPlatform(m.membershipType)}, ID: ${
-            m.membershipId
-          }, displayName: ${m.displayName}`
-        );
-        discordUser &&
-          discordUser.send(
-            `Platform: ${getPlatform(m.membershipType)}, ID: ${
-              m.membershipId
-            }, displayName: ${m.displayName}`
-          );
-      });
+      const send = (message: string) => {
+        console.log(message);
+        discordUser && discordUser.send(message);
+      };
+      send("Found destiny memberships:");
 
-      return res.json(membershipData);
+      await Promise.all(
+        membershipData.map(({ membershipType, membershipId, displayName }) => {
+          return new Promise(async resolve => {
+            const clanData = await getClan(membershipType, membershipId);
+
+            send(
+              `Platform: ${getPlatform(
+                membershipType
+              )}, ID: ${membershipId}, displayName: ${displayName}`
+            );
+            if (clanData.Response.results.length > 0) {
+              const clan = clanData.Response.results[0].group;
+              send(`Clan: ${clan.name}, ID: ${clan.groupId}`);
+            }
+
+            resolve();
+          });
+        })
+      );
+
+      return res.json({
+        membershipData
+      });
     } catch (e) {
       return res
         .status(500)

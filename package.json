@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/tomcorke/experimental-discord-bot#readme",
   "dependencies": {
+    "bluebird": "^3.7.1",
     "bungie-api-ts": "^2.3.0",
     "discord.js": "^11.5.1",
     "dotenv-safe": "^8.2.0",
@@ -28,6 +29,7 @@
     "typescript": "^3.7.2"
   },
   "devDependencies": {
+    "@types/bluebird": "^3.5.29",
     "@types/express": "^4.17.2",
     "@types/isomorphic-fetch": "0.0.35",
     "@types/json-stringify-safe": "^5.0.0",
