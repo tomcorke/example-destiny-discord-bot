@@ -36,6 +36,29 @@ const isCommand = (msg: string, command: string) => {
   return msg.toLowerCase() === `${COMMAND_PREFIX}${command.toLowerCase()}`;
 };
 
+const discordUserMap = new Map<string, Discord.User>();
+const discordUserTimeoutMap = new Map<string, NodeJS.Timeout>();
+const temporarilyCacheDiscordUser = (id: string, user: Discord.User) => {
+  console.log(`Temporarily storing discord user to cache with ID: ${id}`);
+  discordUserMap.set(id, user);
+  // Forget user in 5 minutes
+  const existingTimeout = discordUserTimeoutMap.get(id);
+  if (existingTimeout) {
+    clearTimeout(existingTimeout);
+  }
+  const newTimeout = setTimeout(() => {
+    console.log(`Expiring discord user ID in cache: ${id}`);
+    discordUserMap.delete(id);
+  }, 5 * 60 * 1000);
+  discordUserTimeoutMap.set(id, newTimeout);
+};
+const getDiscordUser = (id: string) => {
+  console.log(`Looking for discord user id in cache: ${id}`);
+  const result = discordUserMap.get(id);
+  !!result ? console.log("Found user!") : console.log("Could not find user");
+  return result;
+};
+
 client.on("message", msg => {
   if (!msg.content.startsWith(COMMAND_PREFIX)) {
     return;
@@ -44,6 +67,7 @@ client.on("message", msg => {
   console.log({ id, username });
   console.log(msg.content);
   if (isCommand(msg.content, "register")) {
+    temporarilyCacheDiscordUser(id, msg.author);
     msg.author.send(
       `To register please visit https://localhost:3000/register-start?discordId=${id}`
     );
@@ -61,6 +85,9 @@ app.use((req, res, next) => {
 
 app.get("/register-start", (req, res) => {
   const { discordId } = req.query;
+
+  // Optionally make state more complex than just discord ID, maybe save to a temporary map or something :shrug:
+
   const bungieOauthUrl = `${BUNGIE_OAUTH_AUTHORIZE_URL}?response_type=code&client_id=${BUNGIE_OAUTH_CLIENT_ID}&state=${discordId}`;
   res.redirect(307, bungieOauthUrl);
 });
@@ -105,6 +132,38 @@ app.get("/register", async (req, res) => {
       }
 
       const membershipData = destinyMemberships.Response.destinyMemberships;
+
+      // Do something here to associate membership(s) with the discordId in state
+
+      console.log(`Got bungie membership data for discord user ID ${state}`);
+      const PLATFORMS: { [key: number]: string } = {
+        1: "xbox",
+        2: "psn",
+        3: "steam",
+        4: "blizzard",
+        5: "stadia"
+      };
+      const getPlatform = (membershipType: number) =>
+        PLATFORMS[membershipType] || "Unknown";
+
+      const discordUser = getDiscordUser(state);
+
+      console.log("Destiny memberships:");
+      discordUser && discordUser.send("Found destiny memberships:");
+      membershipData.forEach(m => {
+        console.log(
+          `Platform: ${getPlatform(m.membershipType)}, ID: ${
+            m.membershipId
+          }, displayName: ${m.displayName}`
+        );
+        discordUser &&
+          discordUser.send(
+            `Platform: ${getPlatform(m.membershipType)}, ID: ${
+              m.membershipId
+            }, displayName: ${m.displayName}`
+          );
+      });
+
       return res.json(membershipData);
     } catch (e) {
       return res

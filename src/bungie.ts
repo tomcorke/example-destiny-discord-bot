@@ -26,8 +26,6 @@ const bungieAuthedFetch = (accessToken: string) => async (
           )
         : ""
     }`;
-    console.log(url);
-    console.log(headers);
     const response = await fetch(url, { headers, credentials: "include" });
     return await response.json();
   } catch (e) {
