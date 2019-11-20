@@ -6,6 +6,7 @@ import {
 } from "bungie-api-ts/groupv2";
 import { getProfile, DestinyComponentType } from "bungie-api-ts/destiny2";
 import { HttpClientConfig } from "bungie-api-ts/http";
+import fetch from "isomorphic-fetch";
 
 require("dotenv-safe").config();
 

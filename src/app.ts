@@ -1,11 +1,12 @@
 import express from "express";
+import { GroupUserInfoCard } from "bungie-api-ts/groupv2";
+import fetch from "isomorphic-fetch";
 
 import {
   getDestinyMemberships as bungieGetDestinyMemberships,
   getClan
 } from "./bungie";
-import { getDiscordUser } from "./discord";
-import { GroupUserInfoCard } from "bungie-api-ts/groupv2";
+import { getDiscordUser, saveDestinyMembershipData } from "./discord";
 
 require("dotenv-safe").config();
 
@@ -119,6 +120,21 @@ const handleMembershipData = async (
   );
 };
 
+const getPrimaryDestinyMembership = async (
+  membershipData: GroupUserInfoCard[]
+) => {
+  if (membershipData.length <= 1) {
+    return membershipData[0];
+  }
+  const nonZeroCrossSaveOverrides = membershipData
+    .flatMap(m => m.crossSaveOverride)
+    .filter(c => c !== 0);
+  const crossSaveMemberships = membershipData.filter(d =>
+    nonZeroCrossSaveOverrides.includes(d.membershipType)
+  );
+  return crossSaveMemberships[0];
+};
+
 app.get("/register", async (req, res) => {
   const { code, state: discordId } = req.query;
   if (code && discordId && discordId !== "undefined") {
@@ -135,6 +151,18 @@ app.get("/register", async (req, res) => {
       );
 
       await handleMembershipData(discordId, membershipData);
+
+      const primaryDestinyMembership = await getPrimaryDestinyMembership(
+        membershipData
+      );
+
+      if (primaryDestinyMembership) {
+        saveDestinyMembershipData(discordId, {
+          membershipType: primaryDestinyMembership.membershipType,
+          membershipId: primaryDestinyMembership.membershipId,
+          displayName: primaryDestinyMembership.displayName
+        });
+      }
 
       return res.json({
         membershipData
