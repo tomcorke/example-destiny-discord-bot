@@ -126,13 +126,10 @@ const getPrimaryDestinyMembership = async (
   if (membershipData.length <= 1) {
     return membershipData[0];
   }
-  const nonZeroCrossSaveOverrides = membershipData
-    .flatMap(m => m.crossSaveOverride)
-    .filter(c => c !== 0);
-  const crossSaveMemberships = membershipData.filter(d =>
-    nonZeroCrossSaveOverrides.includes(d.membershipType)
-  );
-  return crossSaveMemberships[0];
+  // If there's more than one membership, try to figure out which is
+  // the primary (cross-save) membership here, or start doing something
+  // more complex to let the user select their platform
+  return undefined;
 };
 
 app.get("/register", async (req, res) => {
