@@ -92,26 +92,31 @@ const handleMembershipData = async (
 
   const discordUser = getDiscordUser(discordId);
 
-  const send = (message: string) => {
+  const send = async (message: string) => {
     console.log(message);
-    discordUser && discordUser.send(message);
+    discordUser && (await discordUser.send(message));
   };
 
-  send("Found destiny memberships:");
+  await send("Found destiny memberships:");
 
   await Promise.all(
     membershipData.map(({ membershipType, membershipId, displayName }) => {
       return new Promise(async resolve => {
         const clanData = await getClan(membershipType, membershipId);
 
-        send(
+        await send(
           `Platform: ${getPlatform(
             membershipType
           )}, ID: ${membershipId}, displayName: ${displayName}`
         );
-        if (clanData.Response.results.length > 0) {
+        if (clanData.ErrorStatus && clanData.ErrorStatus !== "Success") {
+          console.log(
+            `Unexpected error status from clan lookup: ${clanData.ErrorStatus}`
+          );
+        }
+        if (clanData.Response && clanData.Response.results.length > 0) {
           const clan = clanData.Response.results[0].group;
-          send(`Clan: ${clan.name}, ID: ${clan.groupId}`);
+          await send(`Clan: ${clan.name}, ID: ${clan.groupId}`);
         }
 
         resolve();

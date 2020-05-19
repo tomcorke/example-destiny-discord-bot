@@ -2,7 +2,10 @@ import https from "https";
 import fs from "fs";
 
 import { setClientIdle } from "./discord";
+import { getManifest } from "./bungie";
 import app from "./app";
+
+getManifest();
 
 const PORT = process.env.PORT || 3000;
 
