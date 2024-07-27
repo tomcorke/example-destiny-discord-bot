@@ -1,10 +1,9 @@
 import express from "express";
 import { GroupUserInfoCard } from "bungie-api-ts/groupv2";
-import fetch from "isomorphic-fetch";
 
 import {
   getDestinyMemberships as bungieGetDestinyMemberships,
-  getClan
+  getClan,
 } from "./bungie";
 import { getDiscordUser, saveDestinyMembershipData } from "./discord";
 
@@ -40,11 +39,11 @@ const getToken = async (authorizationCode: string) => {
     cache: "no-cache",
     credentials: "include",
     headers: {
-      "Content-Type": "application/x-www-form-urlencoded"
+      "Content-Type": "application/x-www-form-urlencoded",
     },
     method: "POST",
     redirect: "follow",
-    referrer: "no-referrer"
+    referrer: "no-referrer",
   });
   if (tokenResponse.status !== 200) {
     throw Error(
@@ -85,7 +84,7 @@ const handleMembershipData = async (
     2: "psn",
     3: "steam",
     4: "blizzard",
-    5: "stadia"
+    5: "stadia",
   };
   const getPlatform = (membershipType: number) =>
     PLATFORMS[membershipType] || "Unknown";
@@ -101,7 +100,7 @@ const handleMembershipData = async (
 
   await Promise.all(
     membershipData.map(({ membershipType, membershipId, displayName }) => {
-      return new Promise(async resolve => {
+      return new Promise<void>(async (resolve) => {
         const clanData = await getClan(membershipType, membershipId);
 
         send(
@@ -134,13 +133,17 @@ const getPrimaryDestinyMembership = async (
 
 app.get("/register", async (req, res) => {
   const { code, state: discordId } = req.query;
-  if (code && discordId && discordId !== "undefined") {
+  if (
+    code &&
+    discordId &&
+    discordId !== "undefined" &&
+    typeof code === "string" &&
+    typeof discordId === "string"
+  ) {
     try {
       const tokenData = await getToken(code);
-      const {
-        access_token: accessToken,
-        membership_id: bungieMembershipId
-      } = tokenData;
+      const { access_token: accessToken, membership_id: bungieMembershipId } =
+        tokenData;
 
       const membershipData = await getDestinyMemberships(
         bungieMembershipId,
@@ -157,14 +160,14 @@ app.get("/register", async (req, res) => {
         saveDestinyMembershipData(discordId, {
           membershipType: primaryDestinyMembership.membershipType,
           membershipId: primaryDestinyMembership.membershipId,
-          displayName: primaryDestinyMembership.displayName
+          displayName: primaryDestinyMembership.displayName,
         });
       }
 
       return res.json({
-        membershipData
+        membershipData,
       });
-    } catch (e) {
+    } catch (e: any) {
       return res
         .status(500)
         .json({ error: `Error handling authentication: ${e.message}` });
