@@ -1,4 +1,4 @@
-import Discord from "discord.js";
+import Discord, { GatewayIntentBits } from "discord.js";
 import { BungieMembershipType } from "bungie-api-ts/user";
 
 import { config } from "dotenv-safe";
@@ -9,7 +9,15 @@ const { DISCORD_BOT_TOKEN, DISCORD_BOT_CLIENT_ID, DISCORD_BOT_PERMISSIONS } =
 
 const BOT_OAUTH_URL = `https://discordapp.com/api/oauth2/authorize?client_id=${DISCORD_BOT_CLIENT_ID}&permissions=${DISCORD_BOT_PERMISSIONS}&scope=bot`;
 
-const client = new Discord.Client({ intents: [] });
+const client = new Discord.Client({
+  intents: [
+    GatewayIntentBits.Guilds,
+    GatewayIntentBits.GuildMessages,
+    GatewayIntentBits.MessageContent,
+    GatewayIntentBits.DirectMessages,
+  ],
+  partials: [Discord.Partials.Channel, Discord.Partials.Message],
+});
 
 export const setClientIdle = async () => {
   client.user && (await client.user.setPresence({ status: "idle" }));
@@ -46,7 +54,7 @@ const getDestinyMembershipData = (discordId: string) => {
   return discordDestinyMembershipMap.get(discordId);
 };
 
-client.on("message", (msg) => {
+client.on("messageCreate", (msg) => {
   if (!msg.content.startsWith(COMMAND_PREFIX)) {
     return;
   }

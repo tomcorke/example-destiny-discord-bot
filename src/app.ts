@@ -44,7 +44,6 @@ const getToken = async (authorizationCode: string) => {
     },
     method: "POST",
     redirect: "follow",
-    referrer: "no-referrer",
   });
   if (tokenResponse.status !== 200) {
     throw Error(
@@ -133,6 +132,7 @@ const getPrimaryDestinyMembership = async (
 };
 
 app.get("/register", async (req, res) => {
+  console.log("register handler");
   const { code, state: discordId } = req.query;
   if (
     code &&
