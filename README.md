@@ -26,6 +26,7 @@ Create self-signed certificates for localhost, so the application can run with H
 - Certificates should be in the root directory of the project, and named:
   - localhost-key.pem
   - localhost.pem
+- Generate these by running `mkcert localhost` in the project directory.
   
 ## Installing
 
