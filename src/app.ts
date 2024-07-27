@@ -4,10 +4,11 @@ import { GroupUserInfoCard } from "bungie-api-ts/groupv2";
 import {
   getDestinyMemberships as bungieGetDestinyMemberships,
   getClan,
-} from "./bungie";
-import { getDiscordUser, saveDestinyMembershipData } from "./discord";
+} from "./bungie.js";
+import { getDiscordUser, saveDestinyMembershipData } from "./discord.js";
 
-require("dotenv-safe").config();
+import { config } from "dotenv-safe";
+config();
 
 const { BUNGIE_OAUTH_CLIENT_ID } = process.env;
 const BUNGIE_OAUTH_AUTHORIZE_URL = "https://www.bungie.net/en/OAuth/Authorize";

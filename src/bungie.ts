@@ -7,7 +7,8 @@ import {
 import { getProfile, DestinyComponentType } from "bungie-api-ts/destiny2";
 import { HttpClientConfig } from "bungie-api-ts/http";
 
-require("dotenv-safe").config();
+import { config } from "dotenv-safe";
+config();
 
 const { BUNGIE_API_KEY } = process.env;
 
@@ -58,8 +59,8 @@ export const getDestinyProfile = async (
     membershipType: membershipType,
     destinyMembershipId: destinyMembershipId,
     components: [
-      DestinyComponentType.Characters,
-      DestinyComponentType.Profiles,
+      200, // DestinyComponentType.Characters,
+      100, // DestinyComponentType.Profiles,
     ],
   });
 };
@@ -71,7 +72,7 @@ export const getClan = async (
   return getGroupsForMember(bungieAuthedFetch(), {
     membershipType: membershipType,
     membershipId: destinyMembershipId,
-    groupType: GroupType.Clan,
-    filter: GroupsForMemberFilter.All,
+    groupType: 1, // GroupType.Clan,
+    filter: 0, // GroupsForMemberFilter.All,
   });
 };

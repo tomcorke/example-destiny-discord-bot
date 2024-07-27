@@ -1,24 +1,22 @@
 import Discord from "discord.js";
 import { BungieMembershipType } from "bungie-api-ts/user";
 
-require("dotenv-safe").config();
+import { config } from "dotenv-safe";
+config();
 
-const {
-  DISCORD_BOT_TOKEN,
-  DISCORD_BOT_CLIENT_ID,
-  DISCORD_BOT_PERMISSIONS
-} = process.env;
+const { DISCORD_BOT_TOKEN, DISCORD_BOT_CLIENT_ID, DISCORD_BOT_PERMISSIONS } =
+  process.env;
 
 const BOT_OAUTH_URL = `https://discordapp.com/api/oauth2/authorize?client_id=${DISCORD_BOT_CLIENT_ID}&permissions=${DISCORD_BOT_PERMISSIONS}&scope=bot`;
 
-const client = new Discord.Client();
+const client = new Discord.Client({ intents: [] });
 
 export const setClientIdle = async () => {
-  client.user && (await client.user.setPresence({ game: {}, status: "idle" }));
+  client.user && (await client.user.setPresence({ status: "idle" }));
 };
 
 client.on("ready", () => {
-  console.log(`Discord client logged in as ${client.user.tag}`);
+  console.log(`Discord client logged in as ${client.user?.tag}`);
   console.log(`Add bot to server by visiting ${BOT_OAUTH_URL}`);
 });
 
@@ -29,7 +27,7 @@ const isCommand = (msg: string, command: string) => {
 };
 
 export const getDiscordUser = (id: string) => {
-  return client.users && client.users.get(id);
+  return client.users && client.users.cache.get(id);
 };
 
 interface DestinyMembershipData {
@@ -48,7 +46,7 @@ const getDestinyMembershipData = (discordId: string) => {
   return discordDestinyMembershipMap.get(discordId);
 };
 
-client.on("message", msg => {
+client.on("message", (msg) => {
   if (!msg.content.startsWith(COMMAND_PREFIX)) {
     return;
   }

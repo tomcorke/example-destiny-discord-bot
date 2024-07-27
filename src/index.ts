@@ -1,8 +1,8 @@
 import https from "https";
 import fs from "fs";
 
-import { setClientIdle } from "./discord";
-import app from "./app";
+import { setClientIdle } from "./discord.js";
+import app from "./app.js";
 
 const PORT = process.env.PORT || 3000;
 
